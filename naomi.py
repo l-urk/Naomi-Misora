@@ -144,4 +144,4 @@ async def process_file(file_path):
         print(f"Error processing file: {str(e)}")
 
 # Use 'TOKEN' without percent signs
-client.run(os.getenv('TOKEN'))
+client.run(TOKEN)
