@@ -56,25 +56,25 @@ async def on_message(message):
                     print(f"Removed original file: {file_path}")
 
                     # Rename the file to the new filename
-                    os.rename(file_path, new_file_path)
-                    print(f"Renamed file to: {new_file_path}")
+                    # os.rename(file_path, new_file_path)
+                    # print(f"Renamed file to: {new_file_path}")
 
                     # Send a message with the first line and addresses
-                    message_content = [lines[0].strip()]
-                    message_content.append("IPv4 Addresses:")
-                    message_content.extend(ipv4_addresses)
-                    message_content.append("IPv6 Addresses:")
-                    message_content.extend(ipv6_addresses)
+                    # message_content = [lines[0].strip()]
+                    # message_content.append("IPv4 Addresses:")
+                    # message_content.extend(ipv4_addresses)
+                    # message_content.append("IPv6 Addresses:")
+                    # message_content.extend(ipv6_addresses)
 
-                    await message.channel.send('\n'.join(message_content))
+                    # await message.channel.send('\n'.join(message_content))
 
     # Access the message content
-    message_content = message.content
+    # message_content = message.content
 
-    print(f"Received message: {message_content}")
-    if message_content.startswith('hello'):
-        print("Detected $hello command")
-        await message.channel.send('World!')
+    # print(f"Received message: {message_content}")
+    # if message_content.startswith('hello'):
+      #   print("Detected $hello command")
+      #   await message.channel.send('World!')
 
 async def process_file(file_path):
     try:
@@ -88,14 +88,20 @@ async def process_file(file_path):
             ipv4_addresses = []
             ipv6_addresses = []
 
-            # Initialize a variable to store the host name
+            # Initialize variables to store the host name, default gateway, and active MAC address
             host_name = None
+            default_gateway = None
+            active_mac = None
 
-            # Iterate through the lines to find addresses and host name
+            # Iterate through the lines to find addresses, host name, default gateway, and active MAC address
             for line in lines:
                 if line.startswith("   Host Name . . . . . . . . . . . . : "):
                     # Extract the host name from the line
                     host_name = line.replace("   Host Name . . . . . . . . . . . . : ", "").strip()
+
+                if line.startswith("   Default Gateway . . . . . . . . . : "):
+                    # Extract the default gateway address
+                    default_gateway = line.replace("   Default Gateway . . . . . . . . . : ", "").strip()
 
                 if line.startswith("   IPv4 Address"):
                     ipv4_address = line.split(":")[1].strip()
@@ -106,6 +112,11 @@ async def process_file(file_path):
                     if ipv6_address_match:
                         ipv6_address = ipv6_address_match.group(1).strip()
                         ipv6_addresses.append(ipv6_address)
+
+                if default_gateway and line.strip() == default_gateway:
+                    # Extract the active MAC address associated with the default gateway
+                    active_mac_line = next(lines)
+                    active_mac = active_mac_line.split(":")[1].strip()
 
             # If a host name is found, use it as the new filename
             if host_name:
@@ -128,6 +139,10 @@ async def process_file(file_path):
                 new_file_lines.append("IPv6 Addresses:")
                 new_file_lines.extend(ipv6_addresses)
 
+            # Add active MAC address
+            if active_mac:
+                new_file_lines.append(f"Active MAC Address: {active_mac}")
+
             if new_file_lines:
                 # Construct the new file path for the text file within the subdirectory
                 subdirectory_path = os.path.dirname(file_path)
@@ -142,6 +157,7 @@ async def process_file(file_path):
                 return new_filename, ipv4_addresses, ipv6_addresses
     except Exception as e:
         print(f"Error processing file: {str(e)}")
+
 
 # Use 'TOKEN' without percent signs
 client.run(TOKEN)
